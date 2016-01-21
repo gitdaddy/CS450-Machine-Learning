@@ -6,7 +6,7 @@ from Classifier import Classifier
 from sklearn.neighbors import KNeighborsClassifier
 from scipy import special, optimize
 import pandas as pd
-import csv
+import csv, sys
 
 
 def replace(l, X, Y): # for a 2D matrix
@@ -78,14 +78,15 @@ def testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_t
 
     return
 
+"""
 def runCar():
 
     carData = []
     carTargets = []
     with open('car.csv', 'rb') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=',')
-        i = 0
         for row in spamreader:
+            print row
             carData.append(row)
 
     encodeCar(carData)
@@ -138,38 +139,54 @@ def runIris():
     testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_target)
 
     return
+"""
 
+def runTest(choice):
+    data = []
+    targets = []
+    if choice == 2:
+        carData = []
+        carTargets = []
+        with open('car.csv', 'rb') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',')
+            for row in spamreader:
+                carData.append(row)
 
-def displaySet(set):
-    # Show the data (the attributes of each instance)
-    print(set.data)
-    # Show the target values (in numeric format) of each instance
-    print(set.target)
-      # Show the actual target names that correspond to each number
-    print(set.target_names)
+        encodeCar(carData)
+        np_data = np.array(carData)
+        data = np_data[:, :6]
+        targets = np_data[:, 6]
+    else:
+         iris = datasets.load_iris()
+         #make a list of class instances
+         data = iris.data
+         targets = iris.target
+         print targets
 
-""" from the book
-def kNN(k, data, dataClass, inputs):
-   nInputs = np.shape(inputs)[0]
-   closest = np.zeros(nInputs)
+    # randomize
+    np.unique(targets)
+    np.random.seed(0)
 
-   for n in range(nInputs):
-       distances = np.sum((data-inputs[n,:])**2, axis=1)
-       # identify the nearest neighbors
-       indices = np.argsort(distances, axis=0)
-       classes = np.unique(dataClass[indices[:k]])
-       if(len(classes)== 1):
-           closest[n] = np.unique(classes)
-       else:
-           counts = np.zeros(max(classes) + 1)
-           for i in range(k):
-               counts[dataClass[indices[i]]] += 1
-           closest[n] = np.max(counts)"""
+    # 3 randomize the index
+    indices = np.random.permutation(len(data))
+
+    testNum = int(len(data) * 0.3)  # 70% train, 30% test
+
+    trainingSet_data = data[indices[:-int(testNum)]]
+    trainingSet_target = targets[indices[:-int(testNum)]]
+
+    testSet_data = data[indices[-int(testNum):]]
+    testSet_target = targets[indices[-int(testNum):]]
+
+    testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_target)
+
+    return
 
 #START
-choice = input("Choose Set: 1. Iris, 2. Car Set > ")
-if (choice == 2):
-    runCar()
-else:
-    runIris()
+def main(argv):
+    choice = input("Choose Set: 1. Iris, 2. Car Set > ")
+    runTest(choice)
+    #runCar()
 
+if __name__ == "__main__":
+    main(sys.argv)
