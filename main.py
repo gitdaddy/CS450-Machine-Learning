@@ -67,14 +67,14 @@ def testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_t
     percentCorrect = numCorrect / float(len(predictionSet))
     percentGivenCorrect = numGivenCorrect / float(len(predictions))
 
-    print"Using my kNN percent correct is :"
+    print ("Using my kNN percent correct is :")
     print("%.2f " %percentCorrect)
-    print "or ", numCorrect, " /", len(predictionSet)
+    print ("or ", numCorrect, " /", len(predictionSet))
 
     # for given classifier
-    print"Given kNN percent correct is :"
-    print("%.2f " %percentGivenCorrect)
-    print "or ", numGivenCorrect, " /", len(predictions)
+    print ("Given kNN percent correct is :")
+    print ("%.2f " %percentGivenCorrect)
+    print ("or ", numGivenCorrect, " /", len(predictions))
 
     return
 
@@ -144,24 +144,25 @@ def runIris():
 def runTest(choice):
     data = []
     targets = []
-    if choice == 2:
+    if int(choice) >= 2:
+        print("Choice: ", choice)
         carData = []
         carTargets = []
-        with open('car.csv', 'rb') as csvfile:
+        with open('car.csv', 'r') as csvfile:
             spamreader = csv.reader(csvfile, delimiter=',')
             for row in spamreader:
                 carData.append(row)
 
+        print("Loading Data...")
         encodeCar(carData)
         np_data = np.array(carData)
-        data = np_data[:, :6]
-        targets = np_data[:, 6]
+        data = np_data[:, :(len(carData[0]) - 1)]
+        targets = np_data[:, (len(carData[0]) - 1)]
     else:
          iris = datasets.load_iris()
          #make a list of class instances
          data = iris.data
          targets = iris.target
-         print targets
 
     # randomize
     np.unique(targets)
@@ -184,7 +185,7 @@ def runTest(choice):
 
 #START
 def main(argv):
-    choice = input("Choose Set: 1. Iris, 2. Car Set > ")
+    choice = input("Choose Set: \n 1. Iris \n 2. Car Set \n > ")
     runTest(choice)
     #runCar()
 
