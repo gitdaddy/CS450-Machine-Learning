@@ -1,13 +1,39 @@
 from sklearn import datasets
 import itertools, random
 import numpy as np
-from io import StringIO
 from Classifier import Classifier
+from TreeClassifier import TreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from scipy import special, optimize
 import pandas as pd
 import csv, sys
 
+def readCarData():
+    with open('car.csv', 'r') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',')
+            temp = []
+            for row in spamreader:
+                temp.append(row)
+    return temp
+
+def readLensData(fileName):
+    with open(fileName, 'r') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',')
+            temp = []
+            for row in spamreader:
+                for x in row:
+                    temp.append(int(x))
+
+    return np.reshape(temp, (-1, 6)) # turn a 1 D array to a 2D matrix
+
+def readVotesData(fileName):
+    data = []
+    with open(fileName, 'r') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',')
+            for row in spamreader:
+                data.append(row)
+
+    return np.reshape(data, (-1, 17)) # turn a 1 D array to a 2D matrix
 
 def replace(l, X, Y): # for a 2D matrix
   for i in range(0, len(l)):
@@ -34,18 +60,23 @@ def encodeCar(preCarData):
     replace(preCarData, 'unacc', 1)
     replace(preCarData, 'good', 3)
     replace(preCarData, 'vgood', 4)
-
     return
 
 def writeCSV(data):
-    with open('myCar.csv', 'wb') as csvfile:
+    with open('lenses.csv', 'wb') as csvfile:
         spamwriter = csv.writer(csvfile, delimiter=',')
         for row in range(0, len(data)):
             spamwriter.writerow(data[row])
 
-def testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_target):
+def testKNNClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_target):
+    classChoice = int(input("1. Knn Class\n 2. Decision Tree \n >"))
 
-    myClassifyer = Classifier()
+    if classChoice == 2:
+        myClassifyer = TreeClassifier()
+    else:
+        myClassifyer = Classifier()
+
+
     myClassifyer.train(trainingSet_data, trainingSet_target)
 
     # predictions of classifier
@@ -78,92 +109,45 @@ def testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_t
 
     return
 
-"""
-def runCar():
 
-    carData = []
-    carTargets = []
-    with open('car.csv', 'rb') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',')
-        for row in spamreader:
-            print row
-            carData.append(row)
-
-    encodeCar(carData)
-    np_data = np.array(carData)
-    car_data = np_data[:, :6]
-    car_targets = np_data[:, 6]
-
-    # randomize
-    np.unique(carTargets)
-    np.random.seed(0)
-
-    # 3 randomize the index
-    indices = np.random.permutation(len(car_data))
-
-    testNum = int(len(car_data) * 0.3)  # 70% train, 30% test
-    print "Car Test Length is:",  testNum
-
-    trainingSet_data = car_data[indices[:-int(testNum)]]
-    trainingSet_target = car_targets[indices[:-int(testNum)]]
-
-    testSet_data = car_data[indices[-int(testNum):]]
-    testSet_target = car_targets[indices[-int(testNum):]]
-
-    testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_target)
-
-    return
-
-def runIris():
-    iris = datasets.load_iris()
-
-    #make a list of class instances
-    iris_data = iris.data
-    iris_target = iris.target
-    np.unique(iris_target)
-    np.random.seed(0)
-
-    # 3 randomize the index
-    indices = np.random.permutation(len(iris_data))
-
-    print "Data length is:",  len(iris_data)
-    testNum = (len(iris_data) * 0.3)  # 70% train, 30% test
-    print "Test Length is:",  testNum
-
-    trainingSet_data = iris_data[indices[:-int(testNum)]]  #
-    trainingSet_target = iris_target[indices[:-int(testNum)]]
-
-    testSet_data = iris_data[indices[-int(testNum):]]
-    testSet_target = iris_target[indices[-int(testNum):]]
-
-    testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_target)
-
-    return
-"""
-
-def runTest(choice):
+def runTreeTest():
     data = []
     targets = []
-    if int(choice) >= 2:
-        print("Choice: ", choice)
-        carData = []
-        carTargets = []
-        with open('car.csv', 'r') as csvfile:
-            spamreader = csv.reader(csvfile, delimiter=',')
-            for row in spamreader:
-                carData.append(row)
-
-        print("Loading Data...")
-        encodeCar(carData)
-        np_data = np.array(carData)
-        data = np_data[:, :(len(carData[0]) - 1)]
-        targets = np_data[:, (len(carData[0]) - 1)]
+    labels = []
+    choice = int(input("Choose Set: \n 1. Votes \n 2. Lenses \n 3. Iris \n> "))
+    if (choice == 3):
+        iris = datasets.load_iris()
+        data = iris.data
+        targets = iris.target
+        data = convertToNom(data)
+        labels = ["SepalL", "SepalW", "PetalL", "PetalW"]
+    elif (choice == 2):
+        lensesData = readLensData("lenses.csv")
+        np_data = np.array(lensesData)
+        data = np_data[:, :(len(lensesData[0]) - 1)]
+        targets = np_data[:, (len(lensesData[0]) - 1)] # last column
+        labels = ["Age", "Precription", "Astigmatic", "TearProduction"]
     else:
-         iris = datasets.load_iris()
-         #make a list of class instances
-         data = iris.data
-         targets = iris.target
+        votesData = readVotesData("votes.csv")
+        np_data = np.array(votesData)
+        data = np_data[:, -(len(votesData[0]) - 1):] #5 digits from the left
+        targets = np_data[:, 0] # first column republican1 or democrate 0
+        labels = ["handicapped-infants", "water-project-cost-sharing", "adoption-of-the-budget-resolution",
+                    "physician-fee-freeze", "el-salvador-aid", "religious-groups-in-schools", "anti-satellite-test-ban",
+                    "aid-to-nicaraguan-contras","mx-missile","immigration","synfuels-corporation-cutback","education-spending",
+                    "superfund-right-to-sue","crime","duty-free-exports","export-administration-act-south-africa"]
 
+    classes = []
+    for t in targets:
+        classes.append(t)
+
+    print("Data: \n", data,)
+    classifier = TreeClassifier(data, classes)
+    classifier.train(data, classes, labels)
+
+    return
+
+"""
     # randomize
     np.unique(targets)
     np.random.seed(0)
@@ -180,14 +164,32 @@ def runTest(choice):
     testSet_target = targets[indices[-int(testNum):]]
 
     testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_target)
+"""
 
-    return
+def convertToNom(data):
+    wordMatrix = np.chararray((len(data), len(data[0])), itemsize = 4) # row, col
+    for i in range(0, len(data[0])): # for col
+        col = data[:,i]
+        maxVal = max(col)
+        minVal = min(col)
+        middle = (maxVal + minVal) / 2
+        mTop = (maxVal + middle) / 2
+        mBottom = (middle + minVal) / 2
+        for j in range(0, len(col)): # for each row
+                 # convert the col
+                 if(col[j] > mTop):
+                     wordMatrix[j][i] = "high"
+                 elif(col[j] > mBottom):
+                     wordMatrix[j][i] = 'med'
+                 else:
+                     wordMatrix[j][i] = 'low'
 
-#START
+    return wordMatrix
+
 def main(argv):
-    choice = input("Choose Set: \n 1. Iris \n 2. Car Set \n > ")
-    runTest(choice)
-    #runCar()
+    runTreeTest()
+
+
 
 if __name__ == "__main__":
     main(sys.argv)
