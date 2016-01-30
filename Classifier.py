@@ -10,7 +10,6 @@ class Classifier:
     def myKNN(self, unknown, k):
         result = 0
         dist_sq_array = []
-        #print "current uknown: ", unknown
         for i in range (0, len(self.z_scores_np)):
             dist = 0 # reset the distance
             for j in range (0, len(unknown)):
