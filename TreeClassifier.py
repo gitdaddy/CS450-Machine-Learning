@@ -13,15 +13,6 @@ class TreeClassifier:
         return
 
     def calcEntropy(self, set):
-        """
-        Entropy measures the amount of impurity in a set
-        1 = high means mixed set 0 = low
-        (XXX YYY) - High entropy
-        (xxx xxy) - low entropy = high info grain
-        split the data (lhs & rhs)
-        set1 = (x x x x x x x y y y y)
-        H(Y) = - ∑ (p(yj) * log2(p(yj)))
-        """
         tot = len(set)
         unique = np.unique(set)
         e = 0
@@ -42,7 +33,6 @@ class TreeClassifier:
         result = 0.0
         valueFeq = {}
         numTotalItems = len(data)
-        #print("Index", currentIndex, data)
         labelCol = data[:, currentIndex] # get the col we are testing
 
         for iRow in range(0,len(labelCol)): # for each row
@@ -57,46 +47,48 @@ class TreeClassifier:
         return result
 
     def  makeTree(self, data, classes, labels): # ID3 used here
+        #print("Entering with Labels:", labels)
         nData = len(data)
         numLabelsLeft = 0
         if labels:
             numLabelsLeft = len(labels)
+
         currentNode = Node()
 
         # the most common target
-        #default = max(set(classes), key=classes.count)
-        if(len(labels) == 0):
-            print("Returning 1st if")
-            #currentNode.resultClass = default
+        default = max(set(classes), key=classes.count)
+        if(numLabelsLeft == 0):
+            print("Returning no more labels")
+            currentNode.resultClass = default
+            currentNode.labelName = "End Node"
             return currentNode  # return a leaf node
         elif (len(classes) == 0):
+            print("Returning no more classes")
             return currentNode
         elif (len(np.unique(classes)) == 1):
-            print("Returning 1st if")
+            print("Returning all data the same")
             currentNode.resultClass = classes[0]
+            currentNode.labelName = labels[0]
             return currentNode
         else:
             # choose the best feature
             eList = np.zeros(numLabelsLeft)
-            print("Num Labels left", numLabelsLeft)
-            for ifeature in range(0, numLabelsLeft - 1): # the number features
+            for ifeature in range(0, numLabelsLeft): # the number features
                 g = self.calcInfoGain(data, classes, labels[ifeature], ifeature)
                 eList[ifeature] = g
 
+            #print("E List:", eList)
             bestFeature = 0
             if eList.any():
-                bestFeature = np.argmin(eList)
-            print("BEST FEATURE, eList", bestFeature, eList)
+                bestFeature = np.argmax(eList)
             currentNode.labelName = labels[bestFeature]
 
-           # print("Best Split:", labels[bestFeature])
-
             labels.remove(labels[bestFeature])
-            #print("New Labels", labels)
+
+            #print("Splitting on:", labels[bestFeature])
 
             newDataDict = {}
             newClassDict = {}
-
 
             labelCol = data[:, bestFeature] # get the col we are testing
             possibleValues = np.unique(labelCol)
@@ -108,20 +100,33 @@ class TreeClassifier:
 
 
             # get the col we are testing
-            # loop for the number of possible branches (i.e. low, med, high)
-            print("Labels, Bestfeature", labels, bestFeature)
-            labels.remove(labels[bestFeature])
+            # loop for the number of possible branches (i.e. low, med, high) /~\
+            #print("Labels, Bestfeature", labels, bestFeature)
             for value in possibleValues:
                 temp = np.array(newDataDict[value])
-                print("Send Data:", temp)
-                currentNode.branches.append(self.makeTree(temp, newClassDict[value], labels))
+                print("Possible Value:", value)
+                currentNode.branches[value] = self.makeTree(temp, newClassDict[value], labels)
 
         return currentNode
 
+    def displayTree(self, root, newLevel):
+
+        if root.isLeaf():
+            print(" END ", root.resultClass, end="")
+        elif (root.branches) :
+            print("R", root.labelName, end="")
+            if newLevel:
+                print("")
+            for key in root.branches: # for each node /~\
+                self.displayTree(root.branches[key], False)
+
+
+        return
 
     def train(self, data, classes, labels):
         # modfies the root which is the start of the tree
         self.treeRoot = self.makeTree(data, classes, labels)
+        self.displayTree(self.treeRoot, False)
         return   # do nothing for now
 
     def predict(self, array): # array of data without classes

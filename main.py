@@ -141,7 +141,6 @@ def runTreeTest():
     for t in targets:
         classes.append(t)
 
-    print("Data: \n", data,)
     classifier = TreeClassifier(data, classes)
     classifier.train(data, classes, labels)
 
@@ -188,7 +187,6 @@ def convertToNom(data):
 
 def main(argv):
     runTreeTest()
-
 
 
 if __name__ == "__main__":

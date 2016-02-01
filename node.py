@@ -1,11 +1,11 @@
 import numpy as np
 
 class Node:
-    branches = [] # list of other nodes for each branch
+    branches = {} # list of other nodes for each branch
     labelName = ""
     resultClass = ""
     def __init__(self, labelValue = ""):
-        self.branches = []
+        self.branches = {}
         self.labelName = labelValue
         self.resultClass = ""
         return
