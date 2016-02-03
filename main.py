@@ -137,17 +137,8 @@ def runTreeTest():
                     "aid-to-nicaraguan-contras","mx-missile","immigration","synfuels-corporation-cutback","education-spending",
                     "superfund-right-to-sue","crime","duty-free-exports","export-administration-act-south-africa"]
 
-    classes = []
-    for t in targets:
-        classes.append(t)
 
-    classifier = TreeClassifier(data, classes)
-    classifier.train(data, classes, labels)
-
-    return
-
-"""
-    # randomize
+     # randomize
     np.unique(targets)
     np.random.seed(0)
 
@@ -162,8 +153,45 @@ def runTreeTest():
     testSet_data = data[indices[-int(testNum):]]
     testSet_target = targets[indices[-int(testNum):]]
 
-    testClassifier(trainingSet_data, trainingSet_target, testSet_data, testSet_target)
-"""
+    train_classes = []
+    test_classes = []
+    # convert to arrays
+    for t in trainingSet_target:
+        train_classes.append(t)
+    for t in testSet_target:
+        test_classes.append(t)
+
+    #print("Train Data:\n", trainingSet_data, train_classes)
+    #print("Test Data:\n", testSet_data, test_classes)
+
+    classifier = TreeClassifier()
+    train_labels = []
+    train_labels = list(labels)
+    classifier.train(trainingSet_data, train_classes, labels)
+
+    myPredictions = classifier.predict(testSet_data, train_labels)
+
+
+    # TODO compare exsiting implemetations
+
+    # calculate percent correct
+    numCorrect = 0
+    numGivenCorrect = 0
+    for x in range(0, len(testSet_target)):
+        if myPredictions[x] == test_classes[x]:
+            numCorrect += 1
+        #if predictionSet[x] == testSet_target[x]:
+         #   numGivenCorrect += 1
+
+    percentCorrect = numCorrect / float(len(test_classes))
+    #percentGivenCorrect = numGivenCorrect / float(len(predictions))
+
+    print ("Using my decision tree :")
+    print("%.2f " %percentCorrect)
+    print ("or ", numCorrect, " /", len(test_classes))
+
+    return
+
 
 def convertToNom(data):
     wordMatrix = np.chararray((len(data), len(data[0])), itemsize = 4) # row, col

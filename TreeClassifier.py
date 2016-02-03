@@ -2,13 +2,11 @@ import numpy as np
 import operator
 from node import Node
 
+
 class TreeClassifier:
     treeRoot = Node()
-    all_labels = []
-    def __init__(self, labels): # constructor
-        self.all_labels = labels
+    def __init__(self): # constructor
         self.treeRoot = Node()
-        print("Class Labels:", self.all_labels)
         return
 
     def calcEntropy(self, set):
@@ -96,7 +94,6 @@ class TreeClassifier:
                 self.insertIntoDataStruct(labelCol[value], classes[value], newClassDict)
                 self.insertIntoDataStruct(labelCol[value], data[value], newDataDict)
 
-            #print("Send Classes:", newClassDict)
 
 
             # get the col we are testing
@@ -109,19 +106,35 @@ class TreeClassifier:
 
         return currentNode
 
-    def displayTree(self, root, newLevel, iteration):
+    def displayTree(self, root, newLevel, numNodes, numTabs):
+        #while(numTabs > 1):
+         #   print("\t", end="")
+          #  numTabs -= 1
+        str = ""
+        if numNodes == 1:
+            str = "  |  "
+        elif numNodes == 2:
+            str = " /     \\"
+        elif numNodes == 3:
+            str = " /    |    \\"
+        iteration = 0
         if root.isLeaf():
-            print(" End target:", root.resultClass, end="")
-        elif (root.branches) :
-            print("  ", root.labelName, iteration, end="")
-            if newLevel or iteration == 0:
-                print("")
+            if newLevel:
+                print("\n", end="")
+            print(" Leaf ", end="")
+            return
+        elif (root.branches):
+            print(root.labelName, end="")
+            if newLevel:
+                print("\n", str)
             for key in root.branches:
                 iteration += 1
-                if iteration == (len(root.branches) + 1):
-                    self.displayTree(root.branches[key], False, iteration)
+                if root.branches[key].labelName:
+                    numTabs = iteration
+                if iteration == (len(root.branches)):
+                    self.displayTree(root.branches[key], True, len(root.branches), numTabs)
                 else:
-                    self.displayTree(root.branches[key], True, iteration)
+                    self.displayTree(root.branches[key], False, 0, numTabs)
 
         return
 
@@ -129,7 +142,10 @@ class TreeClassifier:
         # modfies the root which is the start of the tree
         self.treeRoot = self.makeTree(data, classes, labels)
 
-        #self.displayTree(self.treeRoot, False, 0)
+        #str = self.treeRoot.display()
+        str = ""
+        self.displayTree(self.treeRoot, True, len(self.treeRoot.branches), 2)
+        print("")
         return   # do nothing for now
 
     def recurPredict(self, instance, root, labels):
