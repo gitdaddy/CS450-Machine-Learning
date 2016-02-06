@@ -171,9 +171,6 @@ def runTreeTest():
 
     myPredictions = classifier.predict(testSet_data, train_labels)
 
-
-    # TODO compare exsiting implemetations
-
     # calculate percent correct
     numCorrect = 0
     numGivenCorrect = 0
