@@ -1,5 +1,5 @@
 from sklearn import datasets
-from Network import Network
+from Network import Network_Layer
 import numpy as np
 import csv, sys
 import random
@@ -19,44 +19,59 @@ def readPimaData(fileName):
 def testNeuralNetwork():
     """
     This function will load the dataSets and test them
+    Build Layers, first layer # nodes is determined by the # attributes
+    list of weights for each instance plus the bias input
     :return:
     """
     choice = int(input("1. Iris Data\n 2. Pima Data \n >"))
-
     # default values
     dataNormalized = []
     Targets = []
+    layers = [] # list of network layers
+    predictions = []
+    numCorrect = 0
 
     if choice == 1:
         iris = datasets.load_iris()
         data = iris.data
         Targets = iris.target
         dataNormalized = nomalizer(data)
+
+        layers.append(Network_Layer(len(dataNormalized[0]), len(dataNormalized[0]) + 1))
+        # second layer
+        layers.append(Network_Layer(3, len(layers[0].nodes) + 1))
+
+        for i in range(0, len(dataNormalized)):
+            #print("Current Instance:", dataNormalized[i])
+            predictions.append(np.argmax(layers[1].getOutputs(layers[0].getOutputs(dataNormalized[i]))))
+            if (predictions[i] == Targets[i]):
+                numCorrect += 1
     else:
-        # load pima set
-        pData = readPimaData("pima.csv")
-        Targets = pData[:, len(pData[0]) - 1]  # the last col
-        dataNormalized = nomalizer(pData[:, :-1]) # everything but the last col
+         # load pima set
+         pData = readPimaData("pima.csv")
+         Targets = pData[:, len(pData[0]) - 1]  # the last col
+         dataNormalized = nomalizer(pData[:, :-1]) # everything but the last col
+         layers.append(Network_Layer(len(dataNormalized[0]), len(dataNormalized[0]) + 1))
+         # second layer
+         layers.append(Network_Layer(3, len(layers[0].nodes) + 1))
+         # Third layer output layer
+         layers.append(Network_Layer(1, len(layers[1].nodes) + 1))
+
+         for i in range(0, len(dataNormalized)):
+             #print("Current Instance:", dataNormalized[i])
+             predictions.append(np.argmax(layers[2].getOutputs(layers[1].getOutputs(layers[0].getOutputs(dataNormalized[i])))))
+             if (predictions[i] == Targets[i]):
+                 numCorrect += 1
+
 
     #print("Pdata Normalized\n", dataNormalized, "Targets\n", Targets)
 
+    print("Percent Correct: %.2f" %(numCorrect/len(Targets)), " Number Correct:", numCorrect)
 
-    weightList = np.zeros(len(dataNormalized[0]) + 1) # one weight for every value plus bias list[0]
-    # get a small random number for the weights
-    for i in range(0, len(weightList)):
-        SRN = random.uniform(-1, 1)
-        weightList[i] = SRN
-
-    #print("Weights:", weightList)
-
-    # number of nodes must be < num instances
-    neural_classfier = Network(10, weightList)
-
-    resultList = neural_classfier.train(dataNormalized, Targets)
-
-    print("results:\n", resultList)
 
     return
+
+
 
 def nomalizer(dataSet):
     """
@@ -84,7 +99,6 @@ def main(argv):
     :param argv:
     :return:
     """
-
     testNeuralNetwork()
     return
 
