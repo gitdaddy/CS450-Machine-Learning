@@ -5,6 +5,7 @@ from node import Node
 
 class TreeClassifier:
     treeRoot = Node()
+
     def __init__(self): # constructor
         self.treeRoot = Node()
         return

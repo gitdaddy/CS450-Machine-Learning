@@ -2,14 +2,22 @@ import numpy as np
 import math
 
 class Neuron:
-    weights = [] # list of weights for bias = w[0]
-    def __init__(self, weights):
-        self.weights = []
+    def __init__(self, weights, isOutput = False):
+        self.lastOutput = 0
+        self.outputLayer = isOutput
         self.weights = weights
+        self.newWeights = np.zeros(len(weights)) # weights to added
+
+        self.error = 0
         return
 
-    def sigmoidifier(self, h):
-        return 1 / (1 + math.pow(math.e, -h)) # 1 / (1 + e^(-x))
+    def sigmoid(self, h):
+        #print("H:", h)
+        if (abs(h) < 600):
+            return 1 / (1 + math.pow(math.e, -h)) # 1 / (1 + e^(-x))
+        else:
+            print("H:", h)
+            return 0.999999991
 
     def calcOutput(self, instance):
         """
@@ -25,5 +33,9 @@ class Neuron:
         for i in range(0, len(instance)):
             sum += self.weights[i+1] * instance[i]
 
-        #print("Sum = ", sum)
-        return self.sigmoidifier(sum)
+        self.lastOutput = self.sigmoid(sum)
+
+        # if (sum > 4):
+        #     print("Weights:", self.weights, "Instance:", instance)
+        #     print("Sum:", sum, "output:", self.lastOutput)
+        return self.lastOutput

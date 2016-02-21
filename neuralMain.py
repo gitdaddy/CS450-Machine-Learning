@@ -23,8 +23,12 @@ def testNeuralNetwork():
     list of weights for each instance plus the bias input
     :return:
     """
-    choice = int(input("1. Iris Data\n 2. Pima Data \n >"))
+    choice = int(input("1. Iris Data\n2. Pima Data \n>"))
     # default values
+    trainSet = {'train_data': [], 'train_classes': []}
+    validSet = {'valid_data': [], 'valid_classes': []}
+    testSet = {'test_data': [], 'test_classes': []}
+
     dataNormalized = []
     Targets = []
     layers = [] # list of network layers
@@ -36,38 +40,48 @@ def testNeuralNetwork():
         data = iris.data
         Targets = iris.target
         dataNormalized = nomalizer(data)
-
-        layers.append(Network_Layer(len(dataNormalized[0]), len(dataNormalized[0]) + 1))
-        # second layer
-        layers.append(Network_Layer(3, len(layers[0].nodes) + 1))
-
-        for i in range(0, len(dataNormalized)):
-            #print("Current Instance:", dataNormalized[i])
-            predictions.append(np.argmax(layers[1].getOutputs(layers[0].getOutputs(dataNormalized[i]))))
-            if (predictions[i] == Targets[i]):
-                numCorrect += 1
     else:
          # load pima set
          pData = readPimaData("pima.csv")
          Targets = pData[:, len(pData[0]) - 1]  # the last col
          dataNormalized = nomalizer(pData[:, :-1]) # everything but the last col
-         layers.append(Network_Layer(len(dataNormalized[0]), len(dataNormalized[0]) + 1))
-         # second layer
-         layers.append(Network_Layer(3, len(layers[0].nodes) + 1))
-         # Third layer output layer
-         layers.append(Network_Layer(1, len(layers[1].nodes) + 1))
 
-         for i in range(0, len(dataNormalized)):
-             #print("Current Instance:", dataNormalized[i])
-             predictions.append(np.argmax(layers[2].getOutputs(layers[1].getOutputs(layers[0].getOutputs(dataNormalized[i])))))
-             if (predictions[i] == Targets[i]):
-                 numCorrect += 1
+    testNum = int(len(dataNormalized) * 0.3)  # 50% train, 20% validate, 30% test
+    valNum = int(len(dataNormalized) * 0.2)
+    trainNum = int(len(dataNormalized) * 0.5)
+
+    #randomize the data
+    indices = np.random.permutation(len(dataNormalized))
+
+    for i, item in enumerate(indices):
+        if (i < trainNum):
+            trainSet['train_data'].append(dataNormalized[item])
+            trainSet['train_classes'].append(Targets[item])
+        elif (i < (trainNum + valNum)):
+            validSet['valid_data'].append(dataNormalized[item])
+            validSet['valid_classes'].append(Targets[item])
+        else:
+            testSet['test_data'].append(dataNormalized[item])
+            testSet['test_classes'].append(Targets[item])
+
+    # set the layers
+    irisLayers = [len(dataNormalized[0]), 2, 3]
+    pimaLayers = [len(dataNormalized[0]), 1]
+    finalAcc = 0
+
+    if (choice == 1):
+        irisNetwork = Network_Layer(irisLayers)
+        irisNetwork.train(trainSet['train_data'], trainSet['train_classes'], validSet['valid_data'], validSet['valid_classes'], True)
+        finalAcc = irisNetwork.getAcc(testSet['test_data'], testSet['test_classes'], True)
+
+    else:
+        pimaNetwork = Network_Layer(pimaLayers)
+        pimaNetwork.train(trainSet['train_data'], trainSet['train_classes'], validSet['valid_data'], validSet['valid_classes'], False)
+        finalAcc = pimaNetwork.getAcc(testSet['test_data'], testSet['test_classes'], False)
 
 
-    #print("Pdata Normalized\n", dataNormalized, "Targets\n", Targets)
-
-    print("Percent Correct: %.2f" %(numCorrect/len(Targets)), " Number Correct:", numCorrect)
-
+    #print("Predictions:", predictions)
+    print("Final Percent Correct: %.2f" %(finalAcc))
 
     return
 
@@ -85,9 +99,9 @@ def nomalizer(dataSet):
     numCol = len(dataSet[0])
     temp_z = np.zeros((numRow, numCol))
     for col in range(0, numCol):
-            x_np = np.asarray(dataSet[:,col])
+            x_np = np.asarray(dataSet[:, col])
             tempZCol = (x_np - x_np.mean()) / x_np.std()
-            temp_z[:,col] = tempZCol # assign one column at a time
+            temp_z[:, col] = tempZCol # assign one column at a time
 
     return temp_z
 
